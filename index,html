@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Đặt Sân Pickleball Trực Tuyến</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 20px; background-color: #f0f2f5; color: #333; }
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { color: #1b4332; margin-bottom: 5px; font-size: 26px; }
+        .header p { color: #666; font-size: 14px; margin: 0; }
+        .main-container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+        .card { background: #ffffff; padding: 22px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); flex: 1; min-width: 320px; }
+        .card-title { font-size: 18px; font-weight: bold; color: #2d6a4f; margin-bottom: 18px; border-bottom: 2px solid #e9ecef; padding-bottom: 8px; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #495057; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #52b788; box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.2); }
+        .price-preview { background-color: #e8f5e9; padding: 10px; border-radius: 6px; font-weight: bold; color: #2e7d32; text-align: center; margin-bottom: 15px; font-size: 15px; }
+        button.btn-submit { width: 100%; padding: 12px; background: #2d6a4f; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button.btn-submit:hover { background: #1b4332; }
+        #alert-msg { margin-bottom: 12px; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 13.5px; text-align: center; display: none; }
+        .alert-error { background-color: #ffe3e3; color: #c92a2a; border: 1px solid #f8c9c9; }
+        .alert-success { background-color: #d3f9d8; color: #2b8a3e; border: 1px solid #b2f2bb; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 13px; }
+        th, td { border: 1px solid #dee2e6; padding: 10px 8px; text-align: left; }
+        th { background-color: #2d6a4f; color: white; font-weight: 600; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .badge-pending { background: #fff3bf; color: #f59f00; }
+        .badge-approved { background: #d3f9d8; color: #2b8a3e; }
+        .badge-cancelled { background: #ffe3e3; color: #c92a2a; }
+        .btn-action { padding: 4px 8px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 2px; color: white; }
+        .btn-approve { background-color: #40c057; }
+        .btn-cancel { background-color: #fa5252; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>HỆ THỐNG ĐẶT SÂN PICKLEBALL TRỰC TUYẾN</h1>
+    <p>Đồ Án Tốt Nghiệp - Xử Lý Đặt Sân & Kiểm Tra Trùng Lịch Thời Gian Thực</p>
+</div>
+
+<div class="main-container">
+    <!-- KHỐI ĐẶT SÂN -->
+    <div class="card">
+        <div class="card-title">ĐĂNG KÝ ĐẶT SÂN</div>
+        <div id="alert-msg"></div>
+        <form id="bookingForm">
+            <div class="form-group">
+                <label>Họ và tên khách hàng:</label>
+                <input type="text" id="customerName" required placeholder="Ví dụ: Nguyễn Văn A">
+            </div>
+            <div class="form-group">
+                <label>Chọn sân Pickleball:</label>
+                <select id="courtSelect" required onchange="calculatePrice()">
+                    <option value="Sân A1 (Trong Nhà - VIP)" data-price="200000">Sân A1 (Trong Nhà - VIP) - 200.000đ/h</option>
+                    <option value="Sân A2 (Trong Nhà)" data-price="150000">Sân A2 (Trong Nhà) - 150.000đ/h</option>
+                    <option value="Sân B1 (Ngoài Trời)" data-price="120000">Sân B1 (Ngoài Trời) - 120.000đ/h</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ngày đặt sân:</label>
+                <input type="date" id="bookingDate" required>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Giờ bắt đầu:</label>
+                    <input type="time" id="startTime" required onchange="calculatePrice()">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Giờ kết thúc:</label>
+                    <input type="time" id="endTime" required onchange="calculatePrice()">
+                </div>
+            </div>
+            <div class="price-preview" id="priceDisplay">Tạm tính: 0 VNĐ</div>
+            <button type="submit" class="btn-submit">XÁC NHẬN ĐẶT SÂN</button>
+        </form>
+    </div>
+
+    <!-- KHỐI BẢNG CSDL QUẢN TRỊ -->
+    <div class="card" style="flex: 1.5;">
+        <div class="card-title">DANH SÁCH ĐƠN ĐẶT SÂN (DÀNH CHO ADMIN)</div>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Khách Hàng</th>
+                        <th>Tên Sân</th>
+                        <th>Ngày</th>
+                        <th>Khung Giờ</th>
+                        <th>Tổng Tiền</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let bookings = [];
+    let bookingIdCounter = 101;
+
+    // Đặt ngày mặc định là hôm nay
+    document.getElementById('bookingDate').valueAsDate = new Date();
+
+    function calculatePrice() {
+        const courtSelect = document.getElementById('courtSelect');
+        const pricePerHour = parseFloat(courtSelect.options[courtSelect.selectedIndex].getAttribute('data-price'));
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const priceDisplay = document.getElementById('priceDisplay');
+
+        if (startTime && endTime) {
+            const start = new Date(`2000-01-01T${startTime}`);
+            const end = new Date(`2000-01-01T${endTime}`);
+            const diffHours = (end - start) / (1000 * 60 * 60);
+
+            if (diffHours > 0) {
+                const total = diffHours * pricePerHour;
+                priceDisplay.innerHTML = `Tạm tính: ${total.toLocaleString('vi-VN')} VNĐ (${diffHours} giờ)`;
+                return;
+            }
+        }
+        priceDisplay.innerHTML = 'Tạm tính: 0 VNĐ';
+    }
+
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('customerName').value.trim();
+        const courtSelect = document.getElementById('courtSelect');
+        const courtName = courtSelect.value;
+        const pricePerHour = parseFloat(courtSelect.options[courtSelect.selectedIndex].getAttribute('data-price'));
+        const date = document.getElementById('bookingDate').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const alertMsg = document.getElementById('alert-msg');
+
+        const start = new Date(`2000-01-01T${startTime}`);
+        const end = new Date(`2000-01-01T${endTime}`);
+        const diffHours = (end - start) / (1000 * 60 * 60);
+
+        if (diffHours <= 0) {
+            showAlert('Lỗi: Giờ kết thúc phải lớn hơn giờ bắt đầu!', 'error');
+            return;
+        }
+
+        // THUẬT TOÁN KIỂM TRA TRÙNG LỊCH CỐT LÕI (Chỉ kiểm tra đơn không bị Hủy)
+        const isOverlap = bookings.some(b => {
+            return b.status !== 'Hủy' &&
+                   b.courtName === courtName && 
+                   b.date === date && 
+                   (startTime < b.endTime && endTime > b.startTime);
+        });
+
+        if (isOverlap) {
+            showAlert('Rất tiếc! Khung giờ này sân đã có người đặt.', 'error');
+            return;
+        }
+
+        const totalPrice = diffHours * pricePerHour;
+
+        const newBooking = {
+            id: bookingIdCounter++,
+            name: name,
+            courtName: courtName,
+            date: date,
+            startTime: startTime,
+            endTime: endTime,
+            totalPrice: totalPrice,
+            status: 'Chờ duyệt'
+        };
+
+        bookings.unshift(newBooking);
+        showAlert(`Đặt sân thành công! Mã đơn: #${newBooking.id}`, 'success');
+
+        document.getElementById('customerName').value = '';
+        document.getElementById('startTime').value = '';
+        document.getElementById('endTime').value = '';
+        calculatePrice();
+        renderTable();
+    });
+
+    function showAlert(message, type) {
+        const alertMsg = document.getElementById('alert-msg');
+        alertMsg.className = type === 'error' ? 'alert-error' : 'alert-success';
+        alertMsg.innerHTML = message;
+        alertMsg.style.display = 'block';
+    }
+
+    function updateStatus(id, status) {
+        const item = bookings.find(b => b.id === id);
+        if (item) {
+            item.status = status;
+            renderTable();
+        }
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('bookingTableBody');
+        tbody.innerHTML = '';
+
+        if (bookings.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#888;">Chưa có đơn đặt sân nào</td></tr>';
+            return;
+        }
+
+        bookings.forEach(b => {
+            let badgeClass = 'badge-pending';
+            if (b.status === 'Đã duyệt') badgeClass = 'badge-approved';
+            if (b.status === 'Hủy') badgeClass = 'badge-cancelled';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>#${b.id}</b></td>
+                    <td>${escapeHtml(b.name)}</td>
+                    <td>${b.courtName}</td>
+                    <td>${b.date}</td>
+                    <td>${b.startTime} - ${b.endTime}</td>
+                    <td><b>${b.totalPrice.toLocaleString('vi-VN')} đ</b></td>
+                    <td><span class="badge ${badgeClass}">${b.status}</span></td>
+                    <td>
+                        <button class="btn-action btn-approve" onclick="updateStatus(${b.id}, 'Đã duyệt')">Duyệt</button>
+                        <button class="btn-action btn-cancel" onclick="updateStatus(${b.id}, 'Hủy')">Hủy</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    renderTable();
+</script>
+
+</body>
+</html>
